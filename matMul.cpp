@@ -2,6 +2,8 @@
 #include <iostream>
 #include <vector>
 #include <random>
+#include <sys/time.h>
+
 
 int main(int argc, char* argv[]) {
   if (argc != 3) {
@@ -32,6 +34,8 @@ int main(int argc, char* argv[]) {
   // }
 
   
+  struct timeval start, end;
+  gettimeofday(&start, nullptr);
 
   // actual vector multiplication
   // for (int i = 0; i < n; i++) {
@@ -40,6 +44,8 @@ int main(int argc, char* argv[]) {
   //   }
   // }
   // return 0;
+  gettimeofday(&end, nullptr);
+  microseconds = (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_usec - start.tv_usec);
 
 
 
