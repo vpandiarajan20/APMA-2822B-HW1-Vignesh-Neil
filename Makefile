@@ -1,9 +1,18 @@
-# Makefile for a C++ project using g++
+# # Makefile for a C++ project using g++
+CC = g++
+CFLAGS = -std=c++11 -Wall
 
-# Targets and rules
-all: g++ -o matMul matMul.cpp
+SRCS = matMul.cpp
+OBJS = $(SRCS:.cpp=.o)
+EXEC = matMul
+
+all: $(EXEC)
+
+$(EXEC): $(OBJS)
+	$(CC) $(CFLAGS) $(OBJS) -o $(EXEC)
+
+%.o: %.cpp
+	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm matMul
-
-.PHONY: all clean
+	rm -f $(OBJS) $(EXEC)

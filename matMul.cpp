@@ -15,40 +15,42 @@ int main(int argc, char* argv[]) {
   int m = std::atoi(argv[2]);
 
 
-  // double mat[n][m];
-  // double vec[m];
-  // double result[n];
+  double mat[n][m];
+  double vec[m];
+  double result[n];
 
   // randomization
-  // std::random_device rd;
-  // std::mt19937 gen(rd());  // Mersenne Twister 19937 generator
-  // std::uniform_real_distribution<double> distribution(1.0, 100.0);
+  std::random_device rd;
+  std::mt19937 gen(rd());  // Mersenne Twister 19937 generator
+  std::uniform_real_distribution<double> distribution(1.0, 100.0);
 
-  // for (int i = 0; i < n; i++) {
-  //   for (int j = 0; j < m; j++) {
-  //       mat[i][j] = distribution(gen);  // Generate a random double value and store it in the matrix
-  //   }
-  // }
-  // for (int i = 0; i < m; i++) {
-  //   vec[i] = distribution(gen);
-  // }
+  for (int i = 0; i < n; i++) {
+    for (int j = 0; j < m; j++) {
+        mat[i][j] = distribution(gen);  // Generate a random double value and store it in the matrix
+    }
+  }
+  for (int i = 0; i < m; i++) {
+    vec[i] = distribution(gen);
+  }
 
   
   struct timeval start, end;
   gettimeofday(&start, nullptr);
 
   // actual vector multiplication
-  // for (int i = 0; i < n; i++) {
-  //   for (int j = 0; j < m; j++) {
-  //     result[i] += mat[i][m]*vec[m];
-  //   }
-  // }
-  // return 0;
+  for (int i = 0; i < n; i++) {
+    for (int j = 0; j < m; j++) {
+      result[i] += mat[i][m]*vec[m];
+    }
+  }
+
   gettimeofday(&end, nullptr);
-  microseconds = (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_usec - start.tv_usec);
+  int microseconds = (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_usec - start.tv_usec);
+  // int milliseconds = microseconds / 1000;
 
+  std::cout << "Elapsed time: " << microseconds << " microseconds" << std::endl;
 
-
+  return 0;
 
   // non-contiguous memory alloc
   // double **mat;
