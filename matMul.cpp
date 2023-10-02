@@ -9,8 +9,9 @@ std::random_device rd;
 std::mt19937 gen(rd());  // Mersenne Twister 19937 generator
 std::uniform_real_distribution<double> distribution(1.0, 100.0);
 
-double getFlopRate(int flops, int ms) {
+double getFlopRate(int flops, long ms) {
   double flopsms = ((double) flops)/ ((double) ms);
+  // return flopsms;
   return flopsms / 1000.0;
 }
 
@@ -26,20 +27,7 @@ void instantiateMatVec(int n, int m, double **mat, double *vec) {
 }
 
 void basicMatVecMul(int n, int m) {
-  std::cout << "initializing" << std::endl;
-
-  // double mat[n][m];
-  // double vec[m];
-  // double result[n];
-
-  // for (int i = 0; i < n; i++) {
-  //   for (int j = 0; j < m; j++) {
-  //       mat[i][j] = distribution(gen);  // Generate a random double value and store it in the matrix
-  //   }
-  // }
-  // for (int i = 0; i < m; i++) {
-  //   vec[i] = distribution(gen);
-  // }
+  // std::cout << "initializing" << std::endl;
 
   // non-contiguous memory alloc
   double **mat;
@@ -54,20 +42,51 @@ void basicMatVecMul(int n, int m) {
 
   instantiateMatVec(n, m, mat, vec);
 
-  std::cout << "multiplying" << std::endl;
+  // std::cout << "multiplying" << std::endl;
 
   struct timeval start, end;
   gettimeofday(&start, nullptr);
 
   // actual vector multiplication
-  for (int i = 0; i < n; i++) {
-    for (int j = 0; j < m; j++) {
-      result[i] += mat[i][j]*vec[j];
-    }
-  }
+  // for (int i = 0; i < n; i++) {
+  //   for (int j = 0; j < m; j++) {
+  //     result[i] += mat[i][j]*vec[j];
+  //   }
+  // }
+  // unroll 4
+  // for (int i = 0; i < n; i++) {
+  //   int unrolled_iters = m / 4;
+  //   for (int j = 0; j < unrolled_iters * 4; j = j + 4) {
+  //     result[i] += mat[i][j]*vec[j];
+  //     result[i] += mat[i][j+1]*vec[j+1];
+  //     result[i] += mat[i][j+2]*vec[j+2];
+  //     result[i] += mat[i][j+3]*vec[j+3];
+  //   }
+  //   for (int j = unrolled_iters * 4; j < m; j++) {
+  //     result[i] += mat[i][j]*vec[j];
+  //   }
+  // }
+  // unroll 8
+  // for (int i = 0; i < n; i++) {
+  //   int unrolled_iters = m / 8;
+  //   for (int j = 0; j < unrolled_iters * 8; j = j + 8) {
+  //     result[i] += mat[i][j]*vec[j];
+  //     result[i] += mat[i][j+1]*vec[j+1];
+  //     result[i] += mat[i][j+2]*vec[j+2];
+  //     result[i] += mat[i][j+3]*vec[j+3];
+  //     result[i] += mat[i][j+4]*vec[j+4];
+  //     result[i] += mat[i][j+5]*vec[j+5];
+  //     result[i] += mat[i][j+6]*vec[j+6];
+  //     result[i] += mat[i][j+7]*vec[j+7];
+  //   }
+  //   for (int j = unrolled_iters * 8; j < m; j++) {
+  //     result[i] += mat[i][j]*vec[j];
+  //   }
+  // }
 
   gettimeofday(&end, nullptr);
-  int microseconds = (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_usec - start.tv_usec);
+  long microseconds = (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_usec - start.tv_usec);
+
   // int milliseconds = microseconds / 1000;
 
   double floprate = getFlopRate(2*m*n, microseconds);
@@ -93,7 +112,63 @@ void contiguousMatVecMul(int n, int m) {
   for (int i = 1; i < n; i++) {
     mat[i] = mat[0] + i * m;
   }
+
+  double *result = new double[n];
+  
+  instantiateMatVec(n, m, mat, vec);
+
+  // std::cout << "multiplying" << std::endl;
+
+  struct timeval start, end;
+  gettimeofday(&start, nullptr);
+
+  // actual vector multiplication
+  for (int i = 0; i < n; i++) {
+    for (int j = 0; j < m; j++) {
+      result[i] += mat[i][j]*vec[j];
+    }
+  }
+  // unroll 4
+  // for (int i = 0; i < n; i++) {
+  //   int unrolled_iters = m / 4;
+  //   for (int j = 0; j < unrolled_iters * 4; j = j + 4) {
+  //     result[i] += mat[i][j]*vec[j];
+  //     result[i] += mat[i][j+1]*vec[j+1];
+  //     result[i] += mat[i][j+2]*vec[j+2];
+  //     result[i] += mat[i][j+3]*vec[j+3];
+  //   }
+  //   for (int j = unrolled_iters * 4; j < m; j++) {
+  //     result[i] += mat[i][j]*vec[j];
+  //   }
+  // }
+  // unroll 8
+  // for (int i = 0; i < n; i++) {
+  //   int unrolled_iters = m / 8;
+  //   for (int j = 0; j < unrolled_iters * 8; j = j + 8) {
+  //     result[i] += mat[i][j]*vec[j];
+  //     result[i] += mat[i][j+1]*vec[j+1];
+  //     result[i] += mat[i][j+2]*vec[j+2];
+  //     result[i] += mat[i][j+3]*vec[j+3];
+  //     result[i] += mat[i][j+4]*vec[j+4];
+  //     result[i] += mat[i][j+5]*vec[j+5];
+  //     result[i] += mat[i][j+6]*vec[j+6];
+  //     result[i] += mat[i][j+7]*vec[j+7];
+  //   }
+  //   for (int j = unrolled_iters * 8; j < m; j++) {
+  //     result[i] += mat[i][j]*vec[j];
+  //   }
+  // }
+
+  gettimeofday(&end, nullptr);
+  int microseconds = (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_usec - start.tv_usec);
+  // int milliseconds = microseconds / 1000;
+
+  double floprate = getFlopRate(2*m*n, microseconds);
+
+  std::cout << "Rows: " << n << ", Cols: " << m << ", Time:" << microseconds << ", Floprate: " << floprate << std::endl;
+
   delete[] mat[0];
+  return;
 }
 
 int main(int argc, char* argv[]) {
@@ -122,11 +197,5 @@ int main(int argc, char* argv[]) {
       multFunc(r, c);
     }
   }
-
   return 0;
-
-  
-
-  
 }
-
