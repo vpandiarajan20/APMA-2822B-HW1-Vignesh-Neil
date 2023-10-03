@@ -1,0 +1,18 @@
+## SLURM PROLOG ###############################################################
+##    Job ID : 11488644
+##  Job Name : APMA2822B-matMul
+##  Nodelist : node1317
+##      CPUs : 
+##  Mem/Node : 16384 MB
+## Directory : /oscar/home/vpandiar/APMA2822B/APMA-2822B-HW1-Vignesh-Neil
+##   Job Started : Mon Oct  2 18:09:13 EDT 2023
+###############################################################################
+Rows: 10, Cols: 10, Time:0, Floprate: inf, unroll:1
+Rows: 10, Cols: 1000, Time:27, Floprate: 0.740741, unroll:1
+Rows: 10, Cols: 10000, Time:281, Floprate: 0.711744, unroll:1
+Rows: 1000, Cols: 10, Time:12, Floprate: 1.66667, unroll:1
+Rows: 1000, Cols: 1000, Time:2810, Floprate: 0.711744, unroll:1
+Rows: 1000, Cols: 10000, Time:27957, Floprate: 0.715384, unroll:1
+Rows: 10000, Cols: 10, Time:132, Floprate: 1.51515, unroll:1
+Rows: 10000, Cols: 1000, Time:28282, Floprate: 0.707164, unroll:1
+Rows: 10000, Cols: 10000, Time:282117, Floprate: 0.708926, unroll:1

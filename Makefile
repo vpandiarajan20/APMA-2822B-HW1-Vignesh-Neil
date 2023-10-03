@@ -1,6 +1,6 @@
 # # Makefile for a C++ project using g++
 CC = g++
-CFLAGS = -std=c++11 -Wall
+CFLAGS = -O3 -std=c++11 -Wall
 
 SRCS = matMul.cpp
 OBJS = $(SRCS:.cpp=.o)

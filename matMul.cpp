@@ -26,7 +26,52 @@ void instantiateMatVec(int n, int m, double **mat, double *vec) {
   }
 }
 
-void basicMatVecMul(int n, int m) {
+void multiplyVec(int n, int m, double **mat, double *vec, double *result) {
+  // actual vector multiplication
+  for (int i = 0; i < n; i++) {
+    for (int j = 0; j < m; j++) {
+      result[i] += mat[i][j]*vec[j];
+    }
+  }
+}
+
+void multiplyVec4(int n, int m, double **mat, double *vec, double *result) {
+  // unroll 4
+  for (int i = 0; i < n; i++) {
+    int unrolled_iters = m / 4;
+    for (int j = 0; j < unrolled_iters * 4; j = j + 4) {
+      result[i] += mat[i][j]*vec[j];
+      result[i] += mat[i][j+1]*vec[j+1];
+      result[i] += mat[i][j+2]*vec[j+2];
+      result[i] += mat[i][j+3]*vec[j+3];
+    }
+    for (int j = unrolled_iters * 4; j < m; j++) {
+      result[i] += mat[i][j]*vec[j];
+    }
+  }
+}
+
+void multiplyVec8(int n, int m, double **mat, double *vec, double *result) {
+  // unroll 8
+  for (int i = 0; i < n; i++) {
+    int unrolled_iters = m / 8;
+    for (int j = 0; j < unrolled_iters * 8; j = j + 8) {
+      result[i] += mat[i][j]*vec[j];
+      result[i] += mat[i][j+1]*vec[j+1];
+      result[i] += mat[i][j+2]*vec[j+2];
+      result[i] += mat[i][j+3]*vec[j+3];
+      result[i] += mat[i][j+4]*vec[j+4];
+      result[i] += mat[i][j+5]*vec[j+5];
+      result[i] += mat[i][j+6]*vec[j+6];
+      result[i] += mat[i][j+7]*vec[j+7];
+    }
+    for (int j = unrolled_iters * 8; j < m; j++) {
+      result[i] += mat[i][j]*vec[j];
+    }
+  }
+}
+
+void basicMatVecMul(int n, int m, int unroll) {
   // std::cout << "initializing" << std::endl;
 
   // non-contiguous memory alloc
@@ -47,42 +92,15 @@ void basicMatVecMul(int n, int m) {
   struct timeval start, end;
   gettimeofday(&start, nullptr);
 
-  // actual vector multiplication
-  // for (int i = 0; i < n; i++) {
-  //   for (int j = 0; j < m; j++) {
-  //     result[i] += mat[i][j]*vec[j];
-  //   }
-  // }
-  // unroll 4
-  // for (int i = 0; i < n; i++) {
-  //   int unrolled_iters = m / 4;
-  //   for (int j = 0; j < unrolled_iters * 4; j = j + 4) {
-  //     result[i] += mat[i][j]*vec[j];
-  //     result[i] += mat[i][j+1]*vec[j+1];
-  //     result[i] += mat[i][j+2]*vec[j+2];
-  //     result[i] += mat[i][j+3]*vec[j+3];
-  //   }
-  //   for (int j = unrolled_iters * 4; j < m; j++) {
-  //     result[i] += mat[i][j]*vec[j];
-  //   }
-  // }
-  // unroll 8
-  // for (int i = 0; i < n; i++) {
-  //   int unrolled_iters = m / 8;
-  //   for (int j = 0; j < unrolled_iters * 8; j = j + 8) {
-  //     result[i] += mat[i][j]*vec[j];
-  //     result[i] += mat[i][j+1]*vec[j+1];
-  //     result[i] += mat[i][j+2]*vec[j+2];
-  //     result[i] += mat[i][j+3]*vec[j+3];
-  //     result[i] += mat[i][j+4]*vec[j+4];
-  //     result[i] += mat[i][j+5]*vec[j+5];
-  //     result[i] += mat[i][j+6]*vec[j+6];
-  //     result[i] += mat[i][j+7]*vec[j+7];
-  //   }
-  //   for (int j = unrolled_iters * 8; j < m; j++) {
-  //     result[i] += mat[i][j]*vec[j];
-  //   }
-  // }
+  if (unroll == 1) {
+    multiplyVec(n, m, mat, vec, result);
+  } else if (unroll == 4) {
+    multiplyVec4(n, m, mat, vec, result);
+  } else if (unroll == 8){
+    multiplyVec8(n, m, mat, vec, result);
+  } else {
+    std::cout << "error" << std::endl;
+  }
 
   gettimeofday(&end, nullptr);
   long microseconds = (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_usec - start.tv_usec);
@@ -91,7 +109,7 @@ void basicMatVecMul(int n, int m) {
 
   double floprate = getFlopRate(2*m*n, microseconds);
 
-  std::cout << "Rows: " << n << ", Cols: " << m << ", Time:" << microseconds << ", Floprate: " << floprate << std::endl;
+  std::cout << "Rows: " << n << ", Cols: " << m << ", Time:" << microseconds << ", Floprate: " << floprate << ", unroll:" << unroll << std::endl;
   
   for (int i = 0; i < n; i++) {
     delete(mat[i]);
@@ -100,7 +118,7 @@ void basicMatVecMul(int n, int m) {
   return;
 }
 
-void contiguousMatVecMul(int n, int m) {
+void contiguousMatVecMul(int n, int m, int unroll) {
   // contiguous mem
   double **mat;
   mat = new double*[n];
@@ -122,64 +140,37 @@ void contiguousMatVecMul(int n, int m) {
   struct timeval start, end;
   gettimeofday(&start, nullptr);
 
-  // actual vector multiplication
-  for (int i = 0; i < n; i++) {
-    for (int j = 0; j < m; j++) {
-      result[i] += mat[i][j]*vec[j];
-    }
+  if (unroll == 1) {
+    multiplyVec(n, m, mat, vec, result);
+  } else if (unroll == 4) {
+    multiplyVec4(n, m, mat, vec, result);
+  } else if (unroll == 8){
+    multiplyVec8(n, m, mat, vec, result);
+  } else {
+    std::cout << "error" << std::endl;
   }
-  // unroll 4
-  // for (int i = 0; i < n; i++) {
-  //   int unrolled_iters = m / 4;
-  //   for (int j = 0; j < unrolled_iters * 4; j = j + 4) {
-  //     result[i] += mat[i][j]*vec[j];
-  //     result[i] += mat[i][j+1]*vec[j+1];
-  //     result[i] += mat[i][j+2]*vec[j+2];
-  //     result[i] += mat[i][j+3]*vec[j+3];
-  //   }
-  //   for (int j = unrolled_iters * 4; j < m; j++) {
-  //     result[i] += mat[i][j]*vec[j];
-  //   }
-  // }
-  // unroll 8
-  // for (int i = 0; i < n; i++) {
-  //   int unrolled_iters = m / 8;
-  //   for (int j = 0; j < unrolled_iters * 8; j = j + 8) {
-  //     result[i] += mat[i][j]*vec[j];
-  //     result[i] += mat[i][j+1]*vec[j+1];
-  //     result[i] += mat[i][j+2]*vec[j+2];
-  //     result[i] += mat[i][j+3]*vec[j+3];
-  //     result[i] += mat[i][j+4]*vec[j+4];
-  //     result[i] += mat[i][j+5]*vec[j+5];
-  //     result[i] += mat[i][j+6]*vec[j+6];
-  //     result[i] += mat[i][j+7]*vec[j+7];
-  //   }
-  //   for (int j = unrolled_iters * 8; j < m; j++) {
-  //     result[i] += mat[i][j]*vec[j];
-  //   }
-  // }
 
   gettimeofday(&end, nullptr);
   int microseconds = (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_usec - start.tv_usec);
-  // int milliseconds = microseconds / 1000;
 
   double floprate = getFlopRate(2*m*n, microseconds);
 
-  std::cout << "Rows: " << n << ", Cols: " << m << ", Time:" << microseconds << ", Floprate: " << floprate << std::endl;
+  std::cout << "Rows: " << n << ", Cols: " << m << ", Time:" << microseconds << ", Floprate: " << floprate << ", unroll:" << unroll << std::endl;
 
   delete[] mat[0];
   return;
 }
 
 int main(int argc, char* argv[]) {
-  if (argc != 2) {
-        std::cerr << "Usage: " << argv[0] << " <algorithm>" << std::endl;
+  if (argc != 3) {
+        std::cerr << "Usage: " << argv[0] << " <algorithm>" << argv[1] << "<unroll>" << std::endl;
         return 1;  // Return an error code indicating incorrect usage
   }
 
   std::string algorithm = std::string(argv[1]);
+  int unroll = atoi(argv[2]);
 
-  void (*multFunc)(int, int);
+  void (*multFunc)(int, int, int);
   if (algorithm == "basic") {
     multFunc = basicMatVecMul;
   } else if (algorithm == "contiguous") {
@@ -189,12 +180,12 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
-  int rowSizes[4] = {10, 100, 1000, 10000};
-  int colSizes[4] = {10, 100, 1000, 10000};
+  int rowSizes[3] = {10, 1000, 10000};
+  int colSizes[3] = {10, 1000, 10000};
 
   for (int r : rowSizes) {
     for (int c : colSizes){
-      multFunc(r, c);
+      multFunc(r, c, unroll);
     }
   }
   return 0;
